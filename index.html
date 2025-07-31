@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bombe – Tick-Version</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #b30000;
+      font-size: 2.8em;
+    }
+
+    textarea {
+      width: 300px;
+      height: 120px;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      resize: none;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 25px;
+      font-size: 18px;
+      background-color: #b30000;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #800000;
+    }
+
+    #gameArea {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    #bomb {
+      font-size: 90px;
+      margin: 20px 0;
+    }
+
+    #status {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .label {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>💣 Bombe – Tick-Version</h1>
+
+  <p class="label">Gib Spielernamen ein (einer pro Zeile):</p>
+  <textarea id="players" placeholder="z. B. Lara&#10;Tim&#10;Max"></textarea><br />
+  <button onclick="startGame()">🎲 Spiel starten</button>
+
+  <div id="gameArea">
+    <p><strong>Startspieler:</strong> <span id="chosenPlayer"></span></p>
+    <p><strong>Kategorie:</strong> <span id="chosenCategory"></span></p>
+    <div id="bomb">💣</div>
+    <p id="status">Die Bombe tickt...</p>
+  </div>
+
+  <script>
+    const categories = [
+      "Tiere", "Städte", "Länder", "Obst", "Gemüse", "Berufe",
+      "Apps", "Marken", "Sänger", "Serien", "Spiele", "Farben",
+      "Flüsse", "Wörter mit ß", "Wörter mit Doppelten Buchstaben", "Krankheiten"
+    ];
+
+    // Funktion: Spiel-Tickton per Web Audio API erzeugen
+    function playTickSound() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.1);
+
+      oscillator.onended = () => {
+        ctx.close();
+      };
+    }
+
+    function startGame() {
+      const input = document.getElementById("players").value.trim();
+      const names = input.split("\n").map(name => name.trim()).filter(name => name !== "");
+
+      if (names.length < 2) {
+        alert("Bitte mindestens 2 Spieler eingeben!");
+        return;
+      }
+
+      const chosenPlayer = names[Math.floor(Math.random() * names.length)];
+      const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
+
+      document.getElementById("chosenPlayer").textContent = chosenPlayer;
+      document.getElementById("chosenCategory").textContent = chosenCategory;
+      document.getElementById("gameArea").style.display = "block";
+      document.getElementById("status").textContent = "Die Bombe tickt...";
+      document.getElementById("bomb").textContent = "💣";
+
+      const time = Math.floor(Math.random() * 26) + 15; // 15–40 Sekunden
+
+      let counter = 0;
+      const interval = setInterval(() => {
+        playTickSound();
+
+        counter++;
+        if (counter >= time) {
+          clearInterval(interval);
+          document.getElementById("bomb").textContent = "💥";
+          document.getElementById("status").textContent = "💣 Die Bombe ist explodiert!";
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
